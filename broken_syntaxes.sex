@@ -1,0 +1,17 @@
+var a = +5.
+var b = +10.
+var text = "Witaj świecie".
+
+// Printowanie zmiennych
+say<nawias>a + b<saiwan>.
+say<nawias>text<saiwan>.
+
+if <nawias>a <= b<saiwan> <klamra>
+    say<nawias>"Linek jest gejem"<saiwan>.
+<armalk>
+
+var arrey = <nawias_kwadratowy>+1, +2, +3<ywotardawk_saiwan>.
+
+for <nawias>i in arrey<saiwan> <klamra>
+    say<nawias>i<saiwan><nawias_kwadratowy>0<ywotardawk_saiwan>.
+<armalk>

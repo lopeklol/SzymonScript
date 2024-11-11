@@ -1,0 +1,234 @@
+{
+    "type": "main",
+    "value": "",
+    "childs": [
+        {
+            "type": "variable",
+            "value": "a",
+            "childs": []
+        },
+        {
+            "type": "set_operator",
+            "value": "=",
+            "childs": []
+        },
+        {
+            "type": "integer",
+            "value": 5,
+            "childs": []
+        },
+        {
+            "type": "new_line",
+            "value": "",
+            "childs": []
+        },
+        {
+            "type": "variable",
+            "value": "b",
+            "childs": []
+        },
+        {
+            "type": "set_operator",
+            "value": "=",
+            "childs": []
+        },
+        {
+            "type": "integer",
+            "value": 10,
+            "childs": []
+        },
+        {
+            "type": "new_line",
+            "value": "",
+            "childs": []
+        },
+        {
+            "type": "condition_statement",
+            "value": "for",
+            "childs": [
+                {
+                    "type": "condition",
+                    "value": "",
+                    "childs": [
+                        {
+                            "type": "init",
+                            "value": "",
+                            "childs": [
+                                {
+                                    "type": "variable",
+                                    "value": "i",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "set_operator",
+                                    "value": "=",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "integer",
+                                    "value": 0,
+                                    "childs": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "cond",
+                            "value": "",
+                            "childs": [
+                                {
+                                    "type": "variable",
+                                    "value": "i",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "logical_operator",
+                                    "value": "<",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "variable",
+                                    "value": "a",
+                                    "childs": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "increment",
+                            "value": "",
+                            "childs": [
+                                {
+                                    "type": "variable",
+                                    "value": "i",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "arithmetic_operator",
+                                    "value": "+",
+                                    "childs": []
+                                },
+                                {
+                                    "type": "arithmetic_operator",
+                                    "value": "+",
+                                    "childs": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "body",
+                    "value": "",
+                    "childs": [
+                        {
+                            "type": "condition_statement",
+                            "value": "for",
+                            "childs": [
+                                {
+                                    "type": "condition",
+                                    "value": "",
+                                    "childs": [
+                                        {
+                                            "type": "init",
+                                            "value": "",
+                                            "childs": [
+                                                {
+                                                    "type": "variable",
+                                                    "value": "j",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "set_operator",
+                                                    "value": "=",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "integer",
+                                                    "value": 0,
+                                                    "childs": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "cond",
+                                            "value": "",
+                                            "childs": [
+                                                {
+                                                    "type": "variable",
+                                                    "value": "j",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "logical_operator",
+                                                    "value": "<",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "variable",
+                                                    "value": "b",
+                                                    "childs": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "increment",
+                                            "value": "",
+                                            "childs": [
+                                                {
+                                                    "type": "variable",
+                                                    "value": "j",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "arithmetic_operator",
+                                                    "value": "+",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "arithmetic_operator",
+                                                    "value": "+",
+                                                    "childs": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "body",
+                                    "value": "",
+                                    "childs": [
+                                        {
+                                            "type": "function",
+                                            "value": "console.log",
+                                            "childs": [
+                                                {
+                                                    "type": "variable",
+                                                    "value": "i",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "variable",
+                                                    "value": ",",
+                                                    "childs": []
+                                                },
+                                                {
+                                                    "type": "variable",
+                                                    "value": "j",
+                                                    "childs": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "new_line",
+                                            "value": "",
+                                            "childs": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
