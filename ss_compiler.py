@@ -1,4 +1,4 @@
-# Importowanie bibliotek
+# Libraries
 from os.path import dirname
 import sys
 import os
@@ -7,6 +7,7 @@ from json import load, dump
 from random import randint
 import execjs
 
+# Definitions of syntax
 DEFINITONS = {
     'escape_character': '\\',
     'whitespaces': [' ', '\n'],
@@ -49,7 +50,7 @@ DEFINITONS = {
             "=": "=",
         },
         'boolean_operators': {
-            "!": "~",
+            "!": "!",
         },
     },
     'keywords': {
@@ -78,7 +79,7 @@ DEFINITONS = {
     }
 }
 
-# Pobranie pliku do kompilacji
+# Getting the file to compile
 if getattr(sys, 'frozen', False):
     path = dirname(sys.executable)
 else:
@@ -145,7 +146,7 @@ def delete_whitespaces(string: str):
         new += i
     return new
 
-# Definicja białych znaków i separatorów
+# Creating syntax/keywords/whitespaces/comments arrays
 WHITESPACES = DEFINITONS['whitespaces']
 SYNTAXES = [j for i in DEFINITONS['syntaxes'].values() for j in i.values()]
 KEYWORDS = [j for i in DEFINITONS['keywords'].values() for j in i.values()]
@@ -154,7 +155,7 @@ LONGEST_SYNTAX_LENGTH = find_longest_syntax()[2]
 LONGEST_KEYWORD_LENGTH = find_longest_keyword()[2]
 COMMENTS = [DEFINITONS['comments']['one_line'], DEFINITONS['comments']['multi_line']['start'], DEFINITONS['comments']['multi_line']['end']]
 
-# Wypisanie ustawień
+# Printing settings
 print('Using settings:')
 print(f'Syntaxes: {SYNTAXES}')
 print(f'Keywords: {KEYWORDS}')
@@ -226,15 +227,15 @@ for idx, i in enumerate(contents):
         continue
     current_token += i
 
-# Pokazanie tokenów
+# Printing tokens
 print(f"\nTokens: {tokens}")
 
-# Zapisanie tokenów
+# Saving tokens in file
 with open('output.tokens', 'w') as result_file:
     result_file.write(str(tokens))
     result_file.close()
 
-# Klasa node
+# Node class
 class Node:
     def __init__(self, type: str = 'main', value: str = '', childs: list = None):
         self.type = type
@@ -277,7 +278,7 @@ def tree_to_json(tree: Node):
         reasult['childs'].append(tree_to_json(child))
     return reasult
 
-# Tworzenie drzewa
+# Creating AST tree
 defined_variables = {}
 brackets = []
 program = Node()
@@ -299,14 +300,14 @@ for idx, token in enumerate(tokens):
     if skip > 0:
         skip -= 1
         continue
-    if token == get_key_by_value(DEFINITONS['syntaxes']['separators'], ';'):
+    if token == DEFINITONS['syntaxes']['separators'][';']:
         if brackets != []:
             raise_exception(f'Not closed bracket "{brackets[-1]}"', type = 'SyntaxError', line = line)
         current_token_parent = get_token_parent(program, layers)
         current_token_parent.add_child('new_line')
         line += 1
         continue
-    if token == get_key_by_value(DEFINITONS['syntaxes']['separators'], ','):
+    if token == DEFINITONS['syntaxes']['separators'][',']:
         current_token_parent = get_token_parent(program, layers)
         if current_token_parent.type == 'array':
             continue
@@ -326,11 +327,11 @@ for idx, token in enumerate(tokens):
             layers += 1
             layers_vars[layers] = default_layer_settings.copy()
             continue
-    if token in [get_key_by_value(DEFINITONS['syntaxes']['brackets'], '('),
-                 get_key_by_value(DEFINITONS['syntaxes']['brackets'], ')'),
-                 get_key_by_value(DEFINITONS['syntaxes']['brackets'], '['),
-                 get_key_by_value(DEFINITONS['syntaxes']['brackets'], ']')]:
-        if token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '('):
+    if token in [DEFINITONS['syntaxes']['brackets']['('],
+                 DEFINITONS['syntaxes']['brackets'][')'],
+                 DEFINITONS['syntaxes']['brackets']['['],
+                 DEFINITONS['syntaxes']['brackets'][']']]:
+        if token == DEFINITONS['syntaxes']['brackets']['(']:
             current_token_parent = get_token_parent(program, layers)
             if current_token_parent.type == 'condition_statement':
                 if current_token_parent.value == 'else':
@@ -346,7 +347,7 @@ for idx, token in enumerate(tokens):
             layers += 1
             layers_vars[layers] = default_layer_settings.copy()
             brackets.append(token)
-        elif token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '['):
+        elif token == DEFINITONS['syntaxes']['brackets']['[']:
             current_token_parent = get_token_parent(program, layers)
             if get_token_before(program, layers).type == 'set_operator':
                 current_token_parent.add_child('array')
@@ -357,17 +358,17 @@ for idx, token in enumerate(tokens):
             brackets.append(token)
         else:
             try:
-                if not (token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], ')') and
-                        brackets[-1] == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '(') or
-                        token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], ']') and
-                        brackets[-1] == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '[')):
+                if not (token == DEFINITONS['syntaxes']['brackets'][')'] and
+                        brackets[-1] == DEFINITONS['syntaxes']['brackets']['('] or
+                        token == DEFINITONS['syntaxes']['brackets'][']'] and
+                        brackets[-1] == DEFINITONS['syntaxes']['brackets']['[']):
                     raise_exception(f'Not opened bracket "{token}"', type = 'SyntaxError', line = line)
-                if get_token_parent(program, layers).type == 'condition' and token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], ')'):
+                if get_token_parent(program, layers).type == 'condition' and token == DEFINITONS['syntaxes']['brackets'][')']:
                     layers_vars.pop(layers)
                     layers -= 1
                     current_token_parent = get_token_parent(program, layers)
                     current_token_parent.add_child('body')
-                elif get_token_parent(program, layers).type == 'increment' and token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], ')'):
+                elif get_token_parent(program, layers).type == 'increment' and token == DEFINITONS['syntaxes']['brackets'][')']:
                     layers_vars.pop(layers)
                     layers -= 1
                     layers_vars.pop(layers)
@@ -381,11 +382,11 @@ for idx, token in enumerate(tokens):
             except:
                 raise_exception(f'Not opened bracket "{token}"', type = 'SyntaxError', line = line)
         continue
-    if token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '{'):
+    if token == DEFINITONS['syntaxes']['brackets']['{']:
         layers += 1
         layers_vars[layers] = default_layer_settings.copy()
         continue
-    if token == get_key_by_value(DEFINITONS['syntaxes']['brackets'], '}'):
+    if token == DEFINITONS['syntaxes']['brackets']['}']:
         for i in DEFINITONS['keywords']['loops_keywords'].values():
             if layers_vars[layers][f'in_{i}']:
                 layers_vars[layers][f'in_{i}'] = False
@@ -410,7 +411,7 @@ for idx, token in enumerate(tokens):
     current_token_parent = get_token_parent(program, layers)
     if token in [i for i in DEFINITONS['syntaxes']['arithmetic_operators'].values()]:
         current_token_parent.add_child('arithmetic_operator', get_key_by_value(DEFINITONS['syntaxes']['arithmetic_operators'], token))
-    elif token == get_key_by_value(DEFINITONS['syntaxes']['other_operators'], '='):
+    elif token == DEFINITONS['syntaxes']['other_operators']['=']:
         current_token_parent.add_child('set_operator', get_key_by_value(DEFINITONS['syntaxes']['other_operators'], token))
     elif token in [i for i in DEFINITONS['syntaxes']['logical_operators'].values()]:
         current_token_parent.add_child('logical_operator', get_key_by_value(DEFINITONS['syntaxes']['logical_operators'], token))
@@ -426,7 +427,7 @@ for idx, token in enumerate(tokens):
             try:
                 if token[0] in STRING_SIGNS and token[-1] == token[0]:
                     current_token_parent.add_child('string', token)
-                elif tokens[idx + 1] == '(':
+                elif tokens[idx + 1] == DEFINITONS['syntaxes']['brackets']['(']:
                     current_token_parent.add_child('function', token)
                 else:
                     current_token_parent.add_child('variable', token)
@@ -438,7 +439,7 @@ with open('tree.json', 'w') as tree_file:
     dump(tree_to_json(program), tree_file, indent = 4)
     tree_file.close()
 
-# Tworzenie kodu JS
+# Creating JS code
 code_tokens = []
 last_node = None
 def generate_js(node):
@@ -448,45 +449,36 @@ def generate_js(node):
         return f'{value}'
     
     if node.type == 'other_operator':
-        # Operator arytmetyczny
         return token.value
     
     elif node.type == 'variable':
-        # Zmienna
         return node.value
     
     elif node.type == 'integer':
-        # Liczba całkowita
         return str(node.value)
     
     elif node.type == 'string':
-        # String
         return node.value
     
     elif node.type == 'arithmetic_operator':
-        # Operatory arytmetyczne (+, -, *, /)
         return node.value
     
     elif node.type == 'logical_operator':
-        # Operatory logiczne (==, !=, <, >, <=, >=)
         return node.value
     
     elif node.type == 'boolean_operator':
         return node.value
     
     elif node.type == 'function':
-        # Funkcja (przykład: call function)
         function_name = node.value
         args = ' '.join(generate_js(child) for child in node.childs)
         return f"{function_name}({args})"
     
     elif node.type == 'array':
-        # Tablica
         elements = ", ".join(generate_js(child) for child in node.childs)
         return f"[{elements}]"
     
     elif node.type == 'condition_statement':
-        # Instrukcja warunkowa (if, else, etc.)
         if node.value == 'else':
             body = generate_js(node.childs[0])
             return f"else {{\n {body} }}"
@@ -497,7 +489,6 @@ def generate_js(node):
         elif node.value == 'while':
             return f"while ({condition}) {{\n {body} }}"
         elif node.value == 'for':
-            # Zakładając, że `for` ma składnię (init; condition; increment)
             init = generate_js(node.childs[0].childs[0])
             cond = generate_js(node.childs[0].childs[1])
             increment = generate_js(node.childs[0].childs[2])
@@ -524,15 +515,12 @@ def generate_js(node):
         return f"{elements}"
 
     elif node.type == 'set_operator':
-        # Operator przypisania (np. =)
         return node.value
     
     elif node.type == 'new_line':
-        # Operator przypisania (np. =)
         return ';\n'
     
     elif node.type == 'index':
-        # Operator [] jako index listy
         x = "".join(generate_js(child) for child in node.childs)
         return f'[{x}]'
     
