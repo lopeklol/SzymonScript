@@ -8,14 +8,14 @@
 
 ![Github-sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)
 ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![Made](https://img.shields.io/badge/made%20with-php-%23777BB4.svg?style=for-the-badge&logo=php&logoColor=white)
 ![Website](https://img.shields.io/badge/website-down-red)
 ![Tests](https://img.shields.io/badge/tests-failing-red)
 ![Downloads](https://img.shields.io/badge/downloads-0-red)
-![Made](https://img.shields.io/badge/made%20with%20php-%23777BB4.svg?style=for-the-badge&logo=php&logoColor=white)
 
-[**Introduction**](#introduction) |
-[**Documentation**](#documentation) |
-[**Examples**](#examples) |
+[**Introduction**](#introduction) •
+[**Examples**](#examples) •
+[**Documentation**](#documentation) •
 [**Contributing**](#contributing)
 
 </div>
@@ -25,9 +25,12 @@
 > [!CAUTION]
 > This programming language is dangerous to your brain. Use at your own risk!
 
+# Examples
+
 # Documentation
 
-# Examples
+> [!TIP]
+> You can find rest of this documentation [here](https://youareanidiot.cc).
 
 # Contributing
 
