@@ -1,15 +1,17 @@
 <div align="center">
 
-# SzymonScript™️
+# SzymonScript®️
 
-**SzymonScript is a cutting-edge, dynamic programming language designed to make coding faster, more intuitive, and super fun!**
+**_SzymonScript is a cutting-edge, dynamic programming language designed to make coding faster, more intuitive, and super fun!_**
 
-![logo](./resources/logo.png)
+[![logo](./resources/logo.png)](https://youareanidiot.cc)
 
 ![Github-sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)
 ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![Invalid](https://img.shields.io/badge/404-badge%20error-green?style=for-the-badge)
-![Invalid](https://img.shields.io/badge/404-badge%20error-salmon?style=for-the-badge)
+![Website](https://img.shields.io/badge/website-down-red)
+![Tests](https://img.shields.io/badge/tests-failing-red)
+![Downloads](https://img.shields.io/badge/downloads-0-red)
+![Made](https://img.shields.io/badge/made%20with%20php-%23777BB4.svg?style=for-the-badge&logo=php&logoColor=white)
 
 [**Introduction**](#introduction) |
 [**Documentation**](#documentation) |
@@ -18,14 +20,16 @@
 
 </div>
 
+# Introduction
 
-## Introduction
+> [!CAUTION]
+> This programming language is dangerous to your brain. Use at your own risk!
 
-## Documentation
+# Documentation
 
-## Examples
+# Examples
 
-## Contributing
+# Contributing
 
 ```sh
 # Clone the repository
