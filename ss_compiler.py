@@ -5,7 +5,6 @@ import os
 from typing import Optional
 from json import load, dump
 from random import randint
-import execjs
 
 # Definitions of syntax
 DEFINITONS = {
@@ -21,6 +20,7 @@ DEFINITONS = {
     },
     'syntaxes': {
         'separators': {
+            ".": ".",
             ";": ";",
             ",": ",",
         },
@@ -37,6 +37,8 @@ DEFINITONS = {
             "-": "-",
             "*": "*",
             "/": "/",
+            "++": "++",
+            "--": "--",
         },
         'logical_operators': {
             "<": "<",
@@ -132,10 +134,11 @@ def raise_exception(*value, type: str = 'BaseException', line: int = 1, content_
     for i in value:
         text += i + ' '
     text = text[:-1]
-    print(f'''SzymonScript raised an exception in line {line}:\n
+    print(f'''\nSzymonScript raised an exception in line {line}:\n
 {content_lines[line - 1].strip()}\n
 {type}: {text}.
 ''')
+    input("Press [ENTER] key to close the compiler...")
     exit()
 
 def delete_whitespaces(string: str):
@@ -236,7 +239,7 @@ with open('output.tokens', 'w') as result_file:
     result_file.close()
 
 # Node class
-class Node:
+class Node():
     def __init__(self, type: str = 'main', value: str = '', childs: list = None):
         self.type = type
         self.value = value
@@ -269,6 +272,21 @@ def get_token_before(program: Node, layers: int) -> Node:
         return program
     return current
 
+def modify_token_before(program: Node, layers: int, type: str = None, value: str = None, childs: list = None) -> None:
+    current = program
+    try:
+        for _ in range(layers):
+            current = current.childs[-1]
+        current = current.childs[-1]
+    except SyntaxError:
+        current = program
+    if type != None:
+        current.type = type
+    if value != None:
+        current.value = value
+    if childs != None:
+        current.childs = childs
+
 def tree_to_json(tree: Node):
     reasult = {}
     reasult['type'] = tree.type
@@ -278,8 +296,26 @@ def tree_to_json(tree: Node):
         reasult['childs'].append(tree_to_json(child))
     return reasult
 
-# Creating AST tree
 defined_variables = {}
+defined_arrays = {}
+defined_objects = {'window': 'object', 'document': 'object'}
+predefined_objects = ['window', 'document']
+
+def get_variable_type(variable: str, defined_variables = defined_variables, defined_arrays = defined_arrays, defined_objects = defined_objects) -> str:
+    # Types: Number, String, Array, Object
+    if not variable in defined_variables and not variable in defined_arrays and not variable in defined_objects:
+        raise_exception(f'Variable "{variable}" is not defined', type = 'ValueError', line = line)
+    if not variable in defined_variables and variable in defined_arrays:
+        return 'array'
+    if not variable in defined_variables and variable in defined_objects:
+        return 'object'
+    NUMS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    for i in str(defined_variables[variable]):
+        if not i in NUMS:
+            return 'string'
+    return 'number'
+
+# Creating AST tree
 brackets = []
 program = Node()
 layers = 0
@@ -296,7 +332,15 @@ layers_vars = {
 
 skip = 0
 line = 1
+curr_layer = layers
 for idx, token in enumerate(tokens):
+    try:
+        prev_token = get_token_before(program, layers)
+    except IndexError:
+        try:
+            prev_token = get_token_parent(program, layers)
+        except:
+            prev_token = Node()
     if skip > 0:
         skip -= 1
         continue
@@ -327,6 +371,13 @@ for idx, token in enumerate(tokens):
             layers += 1
             layers_vars[layers] = default_layer_settings.copy()
             continue
+        current_token_parent.add_child('separator', ',')
+        continue
+    if token == DEFINITONS['syntaxes']['separators']['.']:
+        if prev_token.value[1:] in predefined_objects:
+            modify_token_before(program, layers, value=prev_token.value[1:])
+        current_token_parent.add_child('separator', '.')
+        continue
     if token in [DEFINITONS['syntaxes']['brackets']['('],
                  DEFINITONS['syntaxes']['brackets'][')'],
                  DEFINITONS['syntaxes']['brackets']['['],
@@ -410,7 +461,12 @@ for idx, token in enumerate(tokens):
         continue
     current_token_parent = get_token_parent(program, layers)
     if token in [i for i in DEFINITONS['syntaxes']['arithmetic_operators'].values()]:
-        current_token_parent.add_child('arithmetic_operator', get_key_by_value(DEFINITONS['syntaxes']['arithmetic_operators'], token))
+        if not (prev_token.type in ['variable', 'string', 'integer', 'array'] or prev_token.type == DEFINITONS['syntaxes']['brackets'][')']) and token == DEFINITONS['syntaxes']['arithmetic_operators']['+']:
+            current_token_parent.add_child('probably_positive_integer', '+')
+        elif prev_token.type != 'variable' and token == DEFINITONS['syntaxes']['arithmetic_operators']['-']:
+            current_token_parent.add_child('probably_negative_integer', '-')
+        else:
+            current_token_parent.add_child('arithmetic_operator', get_key_by_value(DEFINITONS['syntaxes']['arithmetic_operators'], token))
     elif token == DEFINITONS['syntaxes']['other_operators']['=']:
         current_token_parent.add_child('set_operator', get_key_by_value(DEFINITONS['syntaxes']['other_operators'], token))
     elif token in [i for i in DEFINITONS['syntaxes']['logical_operators'].values()]:
@@ -422,7 +478,14 @@ for idx, token in enumerate(tokens):
             current_token_parent.add_child('boolean_operator', get_key_by_value(DEFINITONS['keywords']['boolean_keywords'], token))
     else:
         try:
-            current_token_parent.add_child('integer', int(token))
+            if prev_token.type == 'probably_positive_integer':
+                modify_token_before(program, layers, 'positive_integer')
+                current_token_parent.add_child('integer', float(token))
+            elif prev_token.type == 'probably_negative_integer':
+                modify_token_before(program, layers, 'negative_integer')
+                current_token_parent.add_child('integer', float(token)*-1)
+            else:
+                raise ValueError
         except ValueError:
             try:
                 if token[0] in STRING_SIGNS and token[-1] == token[0]:
@@ -430,9 +493,25 @@ for idx, token in enumerate(tokens):
                 elif tokens[idx + 1] == DEFINITONS['syntaxes']['brackets']['(']:
                     current_token_parent.add_child('function', token)
                 else:
-                    current_token_parent.add_child('variable', token)
+                    try:
+                        if tokens[idx + 1] == '=':
+                            defined_variables[token] = ''
+                    except IndexError:
+                        pass
+                    defined = [i for i in defined_variables.keys()] + [i for i in defined_arrays.keys()] + [i for i in defined_objects.keys()]
+                    if token not in defined:
+                        raise_exception(f'Undefined variable "{token}"', type = 'NameError', line = line)
+                    current_token_parent.add_child('variable', f'_{token}')
             except SyntaxError:
-                current_token_parent.add_child('variable', token)
+                try:
+                    if tokens[idx + 1] == '=':
+                        defined_variables[token] = ''
+                except IndexError:
+                    pass
+                defined = [i for i in defined_variables.keys()] + [i for i in defined_arrays.keys()] + [i for i in defined_objects.keys()]
+                if token not in defined:
+                    raise_exception(f'Undefined variable "{token}"', type = 'NameError', line = line)
+                current_token_parent.add_child('variable', f'_{token}')
     layers_vars[layers]['idx'] += 1
 
 with open('tree.json', 'w') as tree_file:
@@ -441,15 +520,24 @@ with open('tree.json', 'w') as tree_file:
 
 # Creating JS code
 code_tokens = []
-last_node = None
+line = 1
 def generate_js(node):
-    global last_node
+    global line
     if node.type == 'main':
         value = ''.join([generate_js(i) for i in node.childs])
         return f'{value}'
     
-    if node.type == 'other_operator':
-        return token.value
+    elif node.type == 'separator':
+        return node.value
+    
+    elif node.type == 'positive_integer':
+        return node.value
+
+    elif node.type == 'negative_integer':
+        return node.value
+
+    elif node.type == 'other_operator':
+        return node.value
     
     elif node.type == 'variable':
         return node.value
@@ -471,7 +559,7 @@ def generate_js(node):
     
     elif node.type == 'function':
         function_name = node.value
-        args = ' '.join(generate_js(child) for child in node.childs)
+        args = ''.join(generate_js(child) for child in node.childs)
         return f"{function_name}({args})"
     
     elif node.type == 'array':
@@ -518,6 +606,7 @@ def generate_js(node):
         return node.value
     
     elif node.type == 'new_line':
+        line += 1
         return ';\n'
     
     elif node.type == 'index':
@@ -533,3 +622,6 @@ print(f'\nCompiled code:\n\n{code}\n')
 with open(f'{file_name}.js', 'w') as code_file:
     code_file.write(code)
     code_file.close()
+
+input("Press [ENTER] key to close the compiler...")
+exit()
