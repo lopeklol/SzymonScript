@@ -20,7 +20,7 @@ DEFINITONS = {
     },
     'syntaxes': {
         'separators': {
-            ".": ".",
+            ".": "->",
             ";": ";",
             ",": ",",
         },
@@ -67,7 +67,7 @@ DEFINITONS = {
             "while": "while",
         },
         'function_and_classes_keywords': {
-            "def": "def",
+            "function": "define_function",
             "class": "class",
         },
         'boolean_keywords': {
@@ -81,12 +81,171 @@ DEFINITONS = {
     }
 }
 
+# Function definitions
+FUNCTIONS = {
+    'console': {
+        'type': 'object',
+        'name': 'console',
+        'call_keyword': 'console',
+        'childs': {
+            'log': {
+                'type': 'method',
+                'name': 'log',
+                'call_keyword': 'print',
+                'value': None
+            },
+            'error': {
+                'type': 'method',
+                'name': 'error',
+                'call_keyword': 'error',
+                'value': None
+            },
+            'warn': {
+                'type': 'method',
+                'name': 'warn',
+                'call_keyword': 'warn',
+                'value': None
+            }
+        }
+    },
+    'Math': {
+        'type': 'object',
+        'name': 'Math',
+        'call_keyword': 'Math',
+        'childs': {
+            'add': {
+                'type': 'method',
+                'name': 'add',
+                'call_keyword': 'add',
+                'value': None
+            },
+            'subtract': {
+                'type': 'method',
+                'name': 'subtract',
+                'call_keyword': 'subtract',
+                'value': None
+            },
+            'multiply': {
+                'type': 'method',
+                'name': 'multiply',
+                'call_keyword': 'multiply',
+                'value': None
+            },
+            'divide': {
+                'type': 'method',
+                'name': 'divide',
+                'call_keyword': 'divide',
+                'value': None
+            },
+            'random': {
+                'type': 'method',
+                'name': 'random',
+                'call_keyword': 'random',
+                'value': None
+            },
+            'round': {
+                'type': 'method',
+                'name': 'round',
+                'call_keyword': 'round',
+                'value': None
+            }
+        }
+    },
+    'Array': {
+        'type': 'object',
+        'name': 'Array',
+        'call_keyword': 'Array',
+        'childs': {
+            'sort': {
+                'type': 'method',
+                'name': 'sort',
+                'call_keyword': 'sort',
+                'value': "Array.prototype.sort = function() {\nreturn Array.prototype.sort.call(this, (a, b) => {\nif (a < b) return -1;\nif (a > b) return 1;\nreturn 0;});\n};"
+            },
+            'filter': {
+                'type': 'method',
+                'name': 'filter',
+                'call_keyword': 'filter',
+                'value': None
+            },
+            'map': {
+                'type': 'method',
+                'name': 'map',
+                'call_keyword': 'map',
+                'value': None
+            },
+            'push': {
+                'type': 'method',
+                'name': 'push',
+                'call_keyword': 'push',
+                'value': None
+            },
+            'pop': {
+                'type': 'method',
+                'name': 'pop',
+                'call_keyword': 'pop',
+                'value': None
+            }
+        }
+    },
+    'Object': {
+        'type': 'object',
+        'name': 'Object',
+        'call_keyword': 'Object',
+        'childs': {
+            'keys': {
+                'type': 'method',
+                'name': 'keys',
+                'call_keyword': 'keys',
+                'value': None
+            },
+            'values': {
+                'type': 'method',
+                'name': 'values',
+                'call_keyword': 'values',
+                'value': None
+            },
+            'entries': {
+                'type': 'method',
+                'name': 'entries',
+                'call_keyword': 'entries',
+                'value': None
+            }
+        }
+    },
+    'String': {
+        'type': 'object',
+        'name': 'String',
+        'call_keyword': 'String',
+        'childs': {
+            'length': {
+                'type': 'method',
+                'name': 'length',
+                'call_keyword': 'length',
+                'value': None
+            },
+            'toUpperCase': {
+                'type': 'method',
+                'name': 'toUpperCase',
+                'call_keyword': 'toUpperCase',
+                'value': None
+            },
+            'toLowerCase': {
+                'type': 'method',
+                'name': 'toLowerCase',
+                'call_keyword': 'toLowerCase',
+                'value': None
+            }
+        }
+    }
+}
+
 # Getting the file to compile
 if getattr(sys, 'frozen', False):
     path = dirname(sys.executable)
 else:
     path = dirname(os.path.abspath(__file__))
-file_name = input("Wprowadź nazwe pliku, który ma zostac skompilowany (bez rozszerzenia, przyjmuje tylko rozszerzenia .sex): ")
+file_name = input("Enter the file name to compile (write name without extension, accepts only \"*.sex\" files): ")
 with open(f'{path}\\{file_name}.sex', 'r') as file:
     contents = file.read()
     file.close()
@@ -268,7 +427,7 @@ def get_token_before(program: Node, layers: int) -> Node:
         for _ in range(layers):
             current = current.childs[-1]
         current = current.childs[-1]
-    except SyntaxError:
+    except IndexError:
         return program
     return current
 
@@ -298,8 +457,8 @@ def tree_to_json(tree: Node):
 
 defined_variables = {}
 defined_arrays = {}
-defined_objects = {'window': 'object', 'document': 'object'}
-predefined_objects = ['window', 'document']
+defined_objects = {}
+defined_functions = {}
 
 def get_variable_type(variable: str, defined_variables = defined_variables, defined_arrays = defined_arrays, defined_objects = defined_objects) -> str:
     # Types: Number, String, Array, Object
@@ -315,10 +474,25 @@ def get_variable_type(variable: str, defined_variables = defined_variables, defi
             return 'string'
     return 'number'
 
+def check_if_function_exists(function_name: str, path: list = [], function_list: list = FUNCTIONS) -> bool:
+    if path != []:
+        for i in function_list.values():
+            if i['call_keyword'] == path[0]:
+                print(function_list, path)
+                return check_if_function_exists(function_name, path[1:], function_list[i['name']]['childs'])
+        return False
+    for i in function_list.values():
+        if i['call_keyword'] == function_name:
+            if i['type'] == 'method':
+                return {'result': True, 'type': 'method', 'name': i['name'], 'value': i['value']}
+            return {'result': True, 'type': 'object', 'name': i['name'], 'childs': i['childs']}
+    return {'result': False, 'type': None}
+
 # Creating AST tree
 brackets = []
 program = Node()
 layers = 0
+functions_to_update = []
 default_layer_settings = {
     'idx': 0,
     'in_if': False,
@@ -329,11 +503,20 @@ default_layer_settings = {
 layers_vars = {
     0: default_layer_settings.copy()
 }
+global_settings = {
+    'current_path': [],
+    'in_function_args': False,
+    'in_function_body': False,
+    'in_function_variables': [],
+}
 
 skip = 0
 line = 1
 curr_layer = layers
 for idx, token in enumerate(tokens):
+    with open('tree.json', 'w') as tree_file:
+        dump(tree_to_json(program), tree_file, indent = 4)
+        tree_file.close()
     try:
         prev_token = get_token_before(program, layers)
     except IndexError:
@@ -374,20 +557,23 @@ for idx, token in enumerate(tokens):
         current_token_parent.add_child('separator', ',')
         continue
     if token == DEFINITONS['syntaxes']['separators']['.']:
-        if prev_token.value[1:] in predefined_objects:
-            modify_token_before(program, layers, value=prev_token.value[1:])
-        current_token_parent.add_child('separator', '.')
-        continue
+        if check_if_function_exists(tokens[idx - 1], global_settings['current_path'])['result']:
+            global_settings['current_path'] = global_settings['current_path'] + [tokens[idx - 1]]
+            continue
+        print(global_settings['current_path'])
+        raise_exception(f'Undefined object "{tokens[idx - 1]}"', type = 'NameError', line = line)
     if token in [DEFINITONS['syntaxes']['brackets']['('],
                  DEFINITONS['syntaxes']['brackets'][')'],
                  DEFINITONS['syntaxes']['brackets']['['],
                  DEFINITONS['syntaxes']['brackets'][']']]:
         if token == DEFINITONS['syntaxes']['brackets']['(']:
             current_token_parent = get_token_parent(program, layers)
-            if current_token_parent.type == 'condition_statement':
-                if current_token_parent.value == 'else':
+            if current_token_parent.type == 'condition_statement' or prev_token.type in ['function_definition', 'class_definition']:
+                if prev_token.type in ['function_definition', 'class_definition']:
+                    current_token_parent.add_child('args')
+                elif current_token_parent.value == 'else':
                     raise_exception(f'"Else" statement doesn\'t recive condition', type = 'SyntaxError', line = line)
-                if current_token_parent.value == 'for':
+                elif current_token_parent.value == 'for':
                     current_token_parent.add_child('condition')
                     layers += 1
                     layers_vars[layers] = default_layer_settings.copy()
@@ -414,7 +600,14 @@ for idx, token in enumerate(tokens):
                         token == DEFINITONS['syntaxes']['brackets'][']'] and
                         brackets[-1] == DEFINITONS['syntaxes']['brackets']['[']):
                     raise_exception(f'Not opened bracket "{token}"', type = 'SyntaxError', line = line)
-                if get_token_parent(program, layers).type == 'condition' and token == DEFINITONS['syntaxes']['brackets'][')']:
+                if get_token_parent(program, layers).type == 'args':
+                    layers_vars.pop(layers)
+                    layers -= 1
+                    global_settings['in_function_args'] = False
+                    global_settings['in_function_body'] = True
+                    current_token_parent = get_token_parent(program, layers)
+                    current_token_parent.add_child('body')
+                elif get_token_parent(program, layers).type == 'condition' and token == DEFINITONS['syntaxes']['brackets'][')']:
                     layers_vars.pop(layers)
                     layers -= 1
                     current_token_parent = get_token_parent(program, layers)
@@ -438,13 +631,19 @@ for idx, token in enumerate(tokens):
         layers_vars[layers] = default_layer_settings.copy()
         continue
     if token == DEFINITONS['syntaxes']['brackets']['}']:
-        for i in DEFINITONS['keywords']['loops_keywords'].values():
-            if layers_vars[layers][f'in_{i}']:
-                layers_vars[layers][f'in_{i}'] = False
-        layers_vars.pop(layers)
-        layers -= 1
-        layers_vars.pop(layers)
-        layers -= 1
+        if get_token_parent(program, layers).type == 'body':
+            global_settings['in_function_body'] = False
+            global_settings['in_function_variables'] = []
+            layers_vars.pop(layers)
+            layers -= 1
+        else:
+            for i in DEFINITONS['keywords']['loops_keywords'].values():
+                if layers_vars[layers][f'in_{i}']:
+                    layers_vars[layers][f'in_{i}'] = False
+            layers_vars.pop(layers)
+            layers -= 1
+            layers_vars.pop(layers)
+            layers -= 1
         if layers < 0:
             raise_exception('Not opened bracket "{"', type = 'SyntaxError', line = line)
         continue
@@ -471,6 +670,8 @@ for idx, token in enumerate(tokens):
         current_token_parent.add_child('set_operator', get_key_by_value(DEFINITONS['syntaxes']['other_operators'], token))
     elif token in [i for i in DEFINITONS['syntaxes']['logical_operators'].values()]:
         current_token_parent.add_child('logical_operator', get_key_by_value(DEFINITONS['syntaxes']['logical_operators'], token))
+    elif token in [i for i in DEFINITONS['keywords']['function_and_classes_keywords'].values()]:
+        current_token_parent.add_child('define_keyword', get_key_by_value(DEFINITONS['keywords']['function_and_classes_keywords'], token))
     elif token in [DEFINITONS['syntaxes']['boolean_operators']['!']] + [i for i in DEFINITONS['keywords']['boolean_keywords'].values()]:
         if token == DEFINITONS['syntaxes']['boolean_operators']['!']:
             current_token_parent.add_child('boolean_operator', '!')
@@ -488,29 +689,51 @@ for idx, token in enumerate(tokens):
                 raise ValueError
         except ValueError:
             try:
+                func = check_if_function_exists(token, global_settings['current_path'])
                 if token[0] in STRING_SIGNS and token[-1] == token[0]:
                     current_token_parent.add_child('string', token)
+                elif prev_token.type == 'define_keyword':
+                    layers += 1
+                    layers_vars[layers] = default_layer_settings.copy()
+                    current_token_parent.add_child(f'{prev_token.value}_definition', get_key_by_value(DEFINITONS['keywords']['function_and_classes_keywords'], token))
+                    global_settings['in_function_args'] = True
                 elif tokens[idx + 1] == DEFINITONS['syntaxes']['brackets']['(']:
-                    current_token_parent.add_child('function', token)
+                    if func['type'] != 'method':
+                        raise_exception(f'Undefined method: "{token}"', type = "NameError", line = line)
+                    current_token_parent.add_child('function', func['name'])
+                    if func['value']:
+                        functions_to_update.append({
+                            'name': func['name'],
+                            'path': global_settings['current_path'],
+                        })
+                    global_settings['current_path'] = []
+                elif func['result']:
+                    current_token_parent.add_child('object', func['name'])
                 else:
                     try:
                         if tokens[idx + 1] == '=':
+                            current_token_parent.add_child('variable_definition', 'var')
                             defined_variables[token] = ''
                     except IndexError:
                         pass
                     defined = [i for i in defined_variables.keys()] + [i for i in defined_arrays.keys()] + [i for i in defined_objects.keys()]
-                    if token not in defined:
-                        raise_exception(f'Undefined variable "{token}"', type = 'NameError', line = line)
+                    if token not in defined and not global_settings['in_function_args'] and not (token in global_settings['in_function_variables'] and global_settings['in_function_body']):
+                        x = 'object' if tokens[idx + 1] == DEFINITONS["syntaxes"]['separators']['.'] else 'variable'
+                        raise_exception(f'Undefined {x} "{token}"', type = 'NameError', line = line)
+                    if global_settings['in_function_args']:
+                        global_settings['in_function_variables'] = global_settings['in_function_variables'] + [token]
                     current_token_parent.add_child('variable', f'_{token}')
-            except SyntaxError:
+            except IndexError:
                 try:
                     if tokens[idx + 1] == '=':
                         defined_variables[token] = ''
                 except IndexError:
                     pass
                 defined = [i for i in defined_variables.keys()] + [i for i in defined_arrays.keys()] + [i for i in defined_objects.keys()]
-                if token not in defined:
+                if token not in defined and not global_settings['in_function_args'] and not (token in global_settings['in_function_variables'] and global_settings['in_function_body']):
                     raise_exception(f'Undefined variable "{token}"', type = 'NameError', line = line)
+                if global_settings['in_function_args']:
+                    global_settings['in_function_variables'] = global_settings['in_function_variables'] + [token]
                 current_token_parent.add_child('variable', f'_{token}')
     layers_vars[layers]['idx'] += 1
 
@@ -521,7 +744,18 @@ with open('tree.json', 'w') as tree_file:
 # Creating JS code
 code_tokens = []
 line = 1
-def generate_js(node):
+
+def generate_functions_overwrite():
+    result = ''
+    for i in functions_to_update:
+        childs = FUNCTIONS
+        for j in i['path']:
+            childs = childs[j]['childs']
+        string = childs[i['name']]['value']
+        result += string + '\n'
+    return result
+
+def generate_js(node: Node):
     global line
     if node.type == 'main':
         value = ''.join([generate_js(i) for i in node.childs])
@@ -538,6 +772,9 @@ def generate_js(node):
 
     elif node.type == 'other_operator':
         return node.value
+
+    elif node.type == 'variable_definition':
+        return node.value + ' '
     
     elif node.type == 'variable':
         return node.value
@@ -561,6 +798,10 @@ def generate_js(node):
         function_name = node.value
         args = ''.join(generate_js(child) for child in node.childs)
         return f"{function_name}({args})"
+    
+    elif node.type == 'object':
+        function_name = node.value
+        return f"{function_name}."
     
     elif node.type == 'array':
         elements = ", ".join(generate_js(child) for child in node.childs)
@@ -601,6 +842,14 @@ def generate_js(node):
     elif node.type == 'body':
         elements = "".join(generate_js(child) for child in node.childs)
         return f"{elements}"
+    
+    elif node.type == 'define_keyword':
+        return f"{node.value} "
+    
+    elif node.type.endswith('_definition'):
+        args = ''.join(generate_js(child) for child in node.childs[0].childs)
+        body = generate_js(node.childs[1])
+        return f"{node.value}({args}) {{\n {body} }}\n"
 
     elif node.type == 'set_operator':
         return node.value
@@ -616,7 +865,7 @@ def generate_js(node):
     else:
         return ""
 
-code = generate_js(program)
+code = generate_functions_overwrite() + '\n' + generate_js(program)
 print(f'\nCompiled code:\n\n{code}\n')
 
 with open(f'{file_name}.js', 'w') as code_file:
